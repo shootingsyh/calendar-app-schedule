@@ -223,7 +223,10 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4a90e2',
-    padding: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+    paddingLeft: 20,
+    paddingRight: 20,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
