@@ -116,8 +116,7 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <Text style={styles.headerText}>Calendar Sync</Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ padding: 20 }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Calendar Permissions</Text>
           <TouchableOpacity 
@@ -204,7 +203,6 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <Text style={styles.noEventsText}>No imported events yet</Text>
           )}
         </View>
-        </View>
       </ScrollView>
     </View>
   );
@@ -221,6 +219,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    elevation: 10,
+    zIndex: 1000,
   },
   backButton: {
     padding: 10,
@@ -239,9 +239,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  content: {
-    padding: 20,
   },
   section: {
     marginBottom: 20,
