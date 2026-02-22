@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { ScheduleItem } from '../types/schedule';
 import { ScheduleService } from '../services/scheduleService';
+import { format, parseISO } from 'date-fns';
 
 interface ScheduleItemProps {
   item: ScheduleItem;
@@ -32,8 +33,27 @@ const ScheduleItemComponent: React.FC<ScheduleItemProps> = ({ item, onPress, onD
     );
   };
 
+  // Parse the ISO date and format it for display
+  let formattedDate = 'Invalid Date';
+  let formattedTime = 'Invalid Time';
+  
+  if (item.startUtc) {
+    try {
+      const startDate = parseISO(item.startUtc);
+      formattedDate = format(startDate, 'MMM dd, yyyy');
+      if (!item.allDay) {
+        formattedTime = format(startDate, 'h:mm a');
+      }
+    } catch (error) {
+      // If date parsing fails, use fallback values
+      console.warn('Failed to parse date for schedule item:', item.id, error);
+      formattedDate = 'Invalid Date';
+      formattedTime = 'Invalid Time';
+    }
+  }
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={styles.container} onPress={onPress} testID="schedule-item">
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{item.title}</Text>
@@ -41,11 +61,11 @@ const ScheduleItemComponent: React.FC<ScheduleItemProps> = ({ item, onPress, onD
             <Text style={styles.deleteText}>Delete</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.date}>{item.date}</Text>
-        {item.time && (
-          <Text style={styles.time}>{item.time}</Text>
+        <Text style={styles.date}>{formattedDate}</Text>
+        {!item.allDay && (
+          <Text style={styles.time}>{formattedTime}</Text>
         )}
-        {item.isAllDay && (
+        {item.allDay && (
           <Text style={styles.allDay}>All Day</Text>
         )}
         {item.description && (

@@ -29,7 +29,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ date, onBack }) => {
   }, [date]);
 
   const loadScheduleItems = async () => {
-    const items = await scheduleService.getScheduleItemsForDate(date);
+    const items = await scheduleService.getScheduleItemsForDate(new Date(date));
     setScheduleItems(items);
   };
 

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
-import PushNotification from 'react-native-push-notification';
+import notifee, { AndroidChannel, TimestampTrigger, TriggerType } from '@notifee/react-native';
 
 export interface NotificationData {
   id: string;
@@ -14,30 +13,19 @@ export interface NotificationData {
 
 export class NotificationService {
   private notificationKey = 'scheduledNotifications';
+  private channelId: string = 'schedule-reminders';
 
   constructor() {
-    this.configurePushNotifications();
+    this.createNotificationChannel();
   }
 
-  private configurePushNotifications() {
-    PushNotification.configure({
-      onNotification: function (notification: any) {
-        console.log('NOTIFICATION:', notification);
-      },
-      
-      onRegister: function (token: any) {
-        console.log('TOKEN:', token);
-      },
-
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-
-      popInitialNotification: true,
-      requestPermissions: Platform.OS === 'ios',
-    });
+  private async createNotificationChannel() {
+    const channel: AndroidChannel = {
+      id: this.channelId,
+      name: 'Schedule Reminders',
+      importance: 4,
+    };
+    await notifee.createChannel(channel);
   }
 
   // Schedule a notification for a schedule item
@@ -65,14 +53,23 @@ export class NotificationService {
       existingNotifications.push(notificationData);
       await AsyncStorage.setItem(this.notificationKey, JSON.stringify(existingNotifications));
 
-      // Schedule the notification using react-native-push-notification
-      PushNotification.localNotificationSchedule({
-        id: notificationData.id,
-        title: title,
-        message: message,
-        date: this.getNotificationDate(date, time),
-        allowWhileIdle: true,
-      });
+      // Schedule the notification using notifee
+      const trigger: TimestampTrigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: this.getNotificationDate(date, time).getTime(),
+      };
+
+      await notifee.createTriggerNotification(
+        {
+          id: notificationData.id,
+          title: title,
+          body: message,
+          android: {
+            channelId: this.channelId,
+          },
+        },
+        trigger
+      );
 
       return notificationId;
     } catch (error) {
@@ -84,7 +81,7 @@ export class NotificationService {
   // Cancel a notification by ID
   async cancelNotification(id: string): Promise<void> {
     try {
-      PushNotification.cancelLocalNotifications({ id: id });
+      await notifee.cancelNotification(id);
       
       // Remove from storage
       const existingNotifications = await this.getAllNotifications();
@@ -93,7 +90,7 @@ export class NotificationService {
       );
       await AsyncStorage.setItem(this.notificationKey, JSON.stringify(filteredNotifications));
     } catch (error) {
-      console.error('Error canceling notification:', error);
+      console.error('Error canceling notification:', id, error);
     }
   }
 
@@ -109,7 +106,7 @@ export class NotificationService {
         await this.cancelNotification(notification.id);
       }
     } catch (error) {
-      console.error('Error canceling notifications for schedule:', error);
+      console.error('Error canceling notifications for schedule:', scheduleId, error);
     }
   }
 
@@ -130,7 +127,7 @@ export class NotificationService {
       const notifications = await this.getAllNotifications();
       return notifications.filter((notification: NotificationData) => notification.date === date);
     } catch (error) {
-      console.error('Error getting notifications for date:', error);
+      console.error('Error getting notifications for date:', date, error);
       return [];
     }
   }
@@ -160,20 +157,29 @@ export class NotificationService {
           const scheduleDate = updates.date || existingNotifications[notificationIndex].date;
           const scheduleTime = updates.time || existingNotifications[notificationIndex].time;
           
-          PushNotification.localNotificationSchedule({
-            id: updatedNotification.id,
-            title: updatedNotification.title,
-            message: updatedNotification.message,
-            date: this.getNotificationDate(scheduleDate, scheduleTime),
-            allowWhileIdle: true,
-          });
+          const trigger: TimestampTrigger = {
+            type: TriggerType.TIMESTAMP,
+            timestamp: this.getNotificationDate(scheduleDate, scheduleTime).getTime(),
+          };
+
+          await notifee.createTriggerNotification(
+            {
+              id: updatedNotification.id,
+              title: updatedNotification.title,
+              body: updatedNotification.message,
+              android: {
+                channelId: this.channelId,
+              },
+            },
+            trigger
+          );
         }
 
         existingNotifications[notificationIndex] = updatedNotification;
         await AsyncStorage.setItem(this.notificationKey, JSON.stringify(existingNotifications));
       }
     } catch (error) {
-      console.error('Error updating notification:', error);
+      console.error('Error updating notification:', id, error);
     }
   }
 
@@ -199,13 +205,22 @@ export class NotificationService {
         // Only schedule notifications that are not in the past
         const notificationDate = this.getNotificationDate(notification.date, notification.time);
         if (notificationDate > new Date()) {
-          PushNotification.localNotificationSchedule({
-            id: notification.id,
-            title: notification.title,
-            message: notification.message,
-            date: notificationDate,
-            allowWhileIdle: true,
-          });
+          const trigger: TimestampTrigger = {
+            type: TriggerType.TIMESTAMP,
+            timestamp: notificationDate.getTime(),
+          };
+
+          await notifee.createTriggerNotification(
+            {
+              id: notification.id,
+              title: notification.title,
+              body: notification.message,
+              android: {
+                channelId: this.channelId,
+              },
+            },
+            trigger
+          );
         }
       }
     } catch (error) {

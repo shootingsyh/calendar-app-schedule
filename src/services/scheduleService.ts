@@ -1,7 +1,6 @@
 import { ScheduleItem } from '../types/schedule';
 import { ScheduleStorage } from '../utils/scheduleStorage';
 import { NotificationManager } from './notificationManager';
-import { RecurrenceUtils } from '../utils/recurrenceUtils';
 
 export class ScheduleService {
   private storage: ScheduleStorage;

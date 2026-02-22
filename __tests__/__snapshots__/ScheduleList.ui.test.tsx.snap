@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ScheduleList UI Tests should render correctly with all-day event 1`] = `null`;
+
+exports[`ScheduleList UI Tests should render correctly with minimal data 1`] = `null`;
+
+exports[`ScheduleList UI Tests should render correctly with no items 1`] = `null`;
+
+exports[`ScheduleList UI Tests should render correctly without crashing when empty 1`] = `null`;
+
+exports[`ScheduleList UI Tests should render correctly without crashing with sample data 1`] = `null`;
+
+exports[`ScheduleList UI Tests should render correctly without reminder 1`] = `null`;

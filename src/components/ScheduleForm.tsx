@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import DateTimePicker from 'react-native-date-picker';
 import { ScheduleItem } from '../types/schedule';
 import { ScheduleService } from '../services/scheduleService';
+import { format, parseISO } from 'date-fns';
 
 interface ScheduleFormProps {
   scheduleItem?: ScheduleItem | null;
@@ -19,17 +20,50 @@ interface ScheduleFormProps {
 }
 
 const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCancel }) => {
-  const [title, setTitle] = useState(scheduleItem?.title || '');
+const [title, setTitle] = useState(scheduleItem?.title || '');
   const [description, setDescription] = useState(scheduleItem?.description || '');
-  const [date, setDate] = useState(scheduleItem?.date || new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(scheduleItem?.time || '');
-  const [isAllDay, setIsAllDay] = useState(scheduleItem?.isAllDay || false);
+  const [startUtc, setStartUtc] = useState(scheduleItem?.startUtc || new Date().toISOString());
+  const [endUtc, setEndUtc] = useState(scheduleItem?.endUtc || new Date().toISOString());
+  const [allDay, setAllDay] = useState(scheduleItem?.allDay || false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showReminderTimePicker, setShowReminderTimePicker] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(scheduleItem?.reminder?.enabled || false);
   const [reminderTime, setReminderTime] = useState(scheduleItem?.reminder?.time || '');
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
 
   const scheduleService = new ScheduleService();
+
+  // Parse date and time from startUtc when component mounts
+  useEffect(() => {
+    if (scheduleItem?.startUtc) {
+      try {
+        const startDate = parseISO(scheduleItem.startUtc);
+        setDate(format(startDate, 'yyyy-MM-dd'));
+        if (!scheduleItem.allDay) {
+          setStartTime(format(startDate, 'HH:mm'));
+        }
+      } catch (error) {
+        console.warn('Failed to parse start date for schedule item:', scheduleItem.id, error);
+        setDate('');
+        setStartTime('');
+      }
+    }
+    if (scheduleItem?.endUtc) {
+      try {
+        const endDate = parseISO(scheduleItem.endUtc);
+        if (!scheduleItem.allDay) {
+          setEndTime(format(endDate, 'HH:mm'));
+        }
+      } catch (error) {
+        console.warn('Failed to parse end date for schedule item:', scheduleItem.id, error);
+        setEndTime('');
+      }
+    }
+  }, [scheduleItem]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -37,12 +71,43 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCan
       return;
     }
 
+    // Construct start and end times
+    let finalStartUtc = startUtc;
+    let finalEndUtc = endUtc;
+    
+    if (!allDay) {
+      // For non-all day events, we need to combine date with times
+      if (date && startTime) {
+        const [year, month, day] = date.split('-').map(Number);
+        const [hour, minute] = startTime.split(':').map(Number);
+        const newDate = new Date(year, month - 1, day, hour, minute);
+        finalStartUtc = newDate.toISOString();
+      }
+      
+      if (date && endTime) {
+        const [year, month, day] = date.split('-').map(Number);
+        const [hour, minute] = endTime.split(':').map(Number);
+        const newDate = new Date(year, month - 1, day, hour, minute);
+        finalEndUtc = newDate.toISOString();
+      }
+    } else {
+      // For all-day events, set time to start of day
+      if (date) {
+        const [year, month, day] = date.split('-').map(Number);
+        const newDate = new Date(year, month - 1, day);
+        finalStartUtc = newDate.toISOString();
+        // Set end date to next day
+        newDate.setDate(newDate.getDate() + 1);
+        finalEndUtc = newDate.toISOString();
+      }
+    }
+
     const itemData = {
       title,
       description,
-      date,
-      time,
-      isAllDay,
+      startUtc: finalStartUtc,
+      endUtc: finalEndUtc,
+      allDay,
       reminder: reminderEnabled ? { time: reminderTime, enabled: true } : undefined,
     };
 
@@ -106,23 +171,34 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCan
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-          <Text style={styles.dateButtonText}>{date}</Text>
+          <Text style={styles.dateButtonText}>{date || 'Select date'}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Time</Text>
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowTimePicker(true)}>
-          <Text style={styles.dateButtonText}>{time || 'Select time'}</Text>
-        </TouchableOpacity>
-      </View>
+      {!allDay && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Start Time</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartTimePicker(true)}>
+            <Text style={styles.dateButtonText}>{startTime || 'Select start time'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {!allDay && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>End Time</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndTimePicker(true)}>
+            <Text style={styles.dateButtonText}>{endTime || 'Select end time'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.checkboxContainer}>
         <TouchableOpacity
           style={styles.checkbox}
-          onPress={() => setIsAllDay(!isAllDay)}
+          onPress={() => setAllDay(!allDay)}
         >
-          <Text style={styles.checkboxText}>{isAllDay ? '✓' : ''}</Text>
+          <Text style={styles.checkboxText}>{allDay ? '✓' : ''}</Text>
         </TouchableOpacity>
         <Text style={styles.checkboxLabel}>All day event</Text>
       </View>
@@ -140,7 +216,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCan
       {reminderEnabled && (
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Reminder Time</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowTimePicker(true)}>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowReminderTimePicker(true)}>
             <Text style={styles.dateButtonText}>{reminderTime || 'Select reminder time'}</Text>
           </TouchableOpacity>
         </View>
@@ -164,10 +240,11 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCan
         modal
         mode="date"
         open={showDatePicker}
-        date={new Date(date)}
+        date={date ? new Date(date) : new Date()}
         onConfirm={(selectedDate) => {
           setShowDatePicker(false);
-          setDate(selectedDate.toISOString().split('T')[0]);
+          const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+          setDate(formattedDate);
         }}
         onCancel={() => setShowDatePicker(false)}
       />
@@ -175,13 +252,37 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ scheduleItem, onSave, onCan
       <DateTimePicker
         modal
         mode="time"
-        open={showTimePicker}
+        open={showStartTimePicker}
         date={new Date()}
         onConfirm={(selectedTime) => {
-          setShowTimePicker(false);
-          setTime(selectedTime.toTimeString().substring(0, 5));
+          setShowStartTimePicker(false);
+          setStartTime(selectedTime.toTimeString().substring(0, 5));
         }}
-        onCancel={() => setShowTimePicker(false)}
+        onCancel={() => setShowStartTimePicker(false)}
+      />
+
+      <DateTimePicker
+        modal
+        mode="time"
+        open={showEndTimePicker}
+        date={new Date()}
+        onConfirm={(selectedTime) => {
+          setShowEndTimePicker(false);
+          setEndTime(selectedTime.toTimeString().substring(0, 5));
+        }}
+        onCancel={() => setShowEndTimePicker(false)}
+      />
+
+      <DateTimePicker
+        modal
+        mode="time"
+        open={showReminderTimePicker}
+        date={new Date()}
+        onConfirm={(selectedTime) => {
+          setShowReminderTimePicker(false);
+          setReminderTime(selectedTime.toTimeString().substring(0, 5));
+        }}
+        onCancel={() => setShowReminderTimePicker(false)}
       />
     </ScrollView>
   );

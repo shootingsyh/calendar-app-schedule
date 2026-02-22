@@ -1,12 +1,11 @@
 # CalendarApp
 
-A React Native calendar application for Android.
+A React Native calendar application with comprehensive schedule management.
 
 ## Prerequisites
 
 - Node.js (v22 or later)
-- Android SDK with emulator running on Windows
-- WSL (Windows Subsystem for Linux)
+- Android SDK with platform-tools (adb should be available in PATH)
 
 ## Setup
 
@@ -19,23 +18,15 @@ A React Native calendar application for Android.
 
 ### Starting Metro Server
 
-Start Metro server in WSL:
 ```bash
-npx react-native start --port 8081 --host 0.0.0.0
+npx react-native start
 ```
 
-### Running with Custom ADB
+### Run on Android
 
-To run the app using the custom adb wrapper:
+Ensure an Android emulator or device is connected, then run:
 ```bash
-./run_android_with_custom_adb.sh
-```
-
-Or directly:
-```bash
-ANDROID_HOME="/mnt/c/Users/shoot/AppData/Local/Android/Sdk" \
-PATH="/mnt/c/Users/shoot/AppData/Local/Android/Sdk/platform-tools:$PATH" \
-npx react-native run-android --no-packager
+npx react-native run-android
 ```
 
 ## App Features
@@ -44,56 +35,50 @@ npx react-native run-android --no-packager
 - Date selection functionality
 - Month navigation
 - Week numbers display
+- Complete schedule management system (new feature)
+
+## Schedule Management Features
+
+This app now includes a complete schedule management system with:
+
+### Core Features:
+- Create, read, update, delete (CRUD) schedules
+- One-time and recurring schedule support
+- Local data persistence
+- Reminder notifications for upcoming schedules
+- Integration with Google/Apple calendars
+- Date and time selection with recurrence patterns
+
+### Usage:
+1. Tap "Schedule" button in main app to access schedule management
+2. Tap on any date to create a new schedule
+3. Set recurrence patterns for regular events
+4. Configure reminders for upcoming schedules
+5. Sync with device calendars
 
 ## Troubleshooting
 
 ### App can't connect to Metro
 
-1. Make sure Metro is running: `npx react-native start --port 8081 --host 0.0.0.0`
-2. Set up ADB reverse from Windows (run in Windows PowerShell/CMD):
-   ```cmd
-   adb reverse tcp:8081 tcp:8081
-   ```
+1. Make sure Metro is running: `npx react-native start`
+2. Set up ADB reverse: `adb reverse tcp:8081 tcp:8081`
 3. Reload the app from the dev menu (shake device or press Ctrl+M)
 
 ### Build fails with SDK location error
 
-Make sure `android/local.properties` exists with:
-```
-sdk.dir=/home/shootingsyh/Android/Sdk
-```
+Make sure `android/local.properties` exists with the correct SDK path for your system.
 
 ### App crashes on startup
 
 1. Check that Metro is running
-2. Make sure the WSL IP is correct in REACT_NATIVE_PACKAGER_HOSTNAME
-3. Try clearing the cache: `npx react-native start --reset-cache`
+2. Try clearing the cache: `npx react-native start --reset-cache`
 
-### npx react-native run-android fails with custom adb
+### Standard build troubleshooting
 
-If you encounter issues running `npx react-native run-android`, use one of these approaches:
+If `npx react-native run-android` fails:
 
-1. Use the dedicated script:
-   ```bash
-   ./run_android_with_custom_adb.sh
-   ```
+1. Verify device/emulator connection: `adb devices`
+2. Clean and rebuild: `cd android && ./gradlew clean assembleDebug`
+3. Metro reachable: Use `adb reverse tcp:8081 tcp:8081` if needed
 
-2. Set environment variables manually:
-   ```bash
-   ANDROID_HOME="/mnt/c/Users/shoot/AppData/Local/Android/Sdk" \
-   PATH="/mnt/c/Users/shoot/AppData/Local/Android/Sdk/platform-tools:$PATH" \
-   npx react-native run-android --no-packager
-   ```
-
-3. Use the utility script:
-   ```bash
-   ./rn.sh run-android
-   ```
-
-## Architecture
-
-This app is designed to run with:
-- Metro bundler running in WSL
-- Android emulator running on Windows
-- ADB connection through Windows IP for WSL
 

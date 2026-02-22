@@ -104,7 +104,9 @@ export class RecurrenceUtils {
         if (generatedCount >= maxOccurrences) break;
       }
     } catch (error) {
-      console.error('Error generating recurrence occurrences:', error);
+      console.error('Error generating recurrence occurrences:', scheduleItem.id, error);
+      // Return empty array to prevent crashes
+      return [];
     }
 
     // Sort by date
@@ -116,7 +118,7 @@ export class RecurrenceUtils {
   /**
    * Get the RRule frequency constant from our custom frequency
    */
-  private static getRRuleFrequency(frequency: string): number {
+  private static getRRuleFrequency(frequency: string): any {
     switch (frequency) {
       case 'DAILY': return RRule.DAILY;
       case 'WEEKLY': return RRule.WEEKLY;
@@ -129,7 +131,7 @@ export class RecurrenceUtils {
   /**
    * Get the RRule day constant from our custom day string
    */
-  private static getRRuleDay(day: string): number {
+  private static getRRuleDay(day: string): any {
     switch (day) {
       case 'MO': return RRule.MO;
       case 'TU': return RRule.TU;
