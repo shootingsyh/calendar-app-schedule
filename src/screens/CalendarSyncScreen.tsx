@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { CalendarSyncService } from '../services/calendarSyncService';
 import { CalendarEvent } from '../types/calendar';
@@ -24,7 +25,7 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   useEffect(() => {
     loadCalendars();
-  }, []);
+  }, [loadCalendars]);
 
   const loadCalendars = async () => {
     try {
@@ -98,7 +99,7 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Text style={styles.backButtonText}>Back</Text>
@@ -106,7 +107,8 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <Text style={styles.headerText}>Calendar Sync</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Calendar Permissions</Text>
           <TouchableOpacity 
@@ -193,8 +195,8 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <Text style={styles.noEventsText}>No imported events yet</Text>
           )}
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -210,8 +212,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   backButton: {
-    position: 'absolute',
-    left: 20,
+    padding: 10,
   },
   backButtonText: {
     color: 'white',
@@ -223,6 +224,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   content: {
