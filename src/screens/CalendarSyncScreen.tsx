@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Alert,
   ActivityIndicator,
   Platform,
@@ -84,8 +85,14 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleBackPress = () => {
-    console.log('Back button pressed in CalendarSyncScreen');
-    onBack();
+    console.log('*** BACK BUTTON PRESSED ***');
+    console.log('onBack:', typeof onBack);
+    if (onBack) {
+      console.log('Calling onBack()');
+      onBack();
+    } else {
+      console.log('onBack is undefined!');
+    }
   };
 
   const handleRequestPermission = async () => {
@@ -106,13 +113,14 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={handleBackPress} 
-          style={styles.backButton}
+        <TouchableWithoutFeedback 
+          onPress={handleBackPress}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
+          <View style={styles.backButton}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </View>
+        </TouchableWithoutFeedback>
         <Text style={styles.headerText}>Calendar Sync</Text>
       </View>
 
