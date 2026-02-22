@@ -195,6 +195,7 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <Text style={styles.noEventsText}>No imported events yet</Text>
           )}
         </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
