@@ -11,6 +11,7 @@ import { ScheduleList } from '../components/ScheduleList';
 import { ScheduleItem } from '../types/schedule';
 import { ScheduleService } from '../services/scheduleService';
 import ScheduleForm from '../components/ScheduleForm';
+import CalendarSyncScreen from '../screens/CalendarSyncScreen';
 
 interface ScheduleScreenProps {
   date: string;
@@ -24,14 +25,14 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ date, onBack }) => {
   const [showCalendarSync, setShowCalendarSync] = useState(false);
   const scheduleService = new ScheduleService();
 
-  useEffect(() => {
-    loadScheduleItems();
-  }, [date, loadScheduleItems]);
-
   const loadScheduleItems = async () => {
     const items = await scheduleService.getScheduleItemsForDate(new Date(date));
     setScheduleItems(items);
   };
+
+  useEffect(() => {
+    loadScheduleItems();
+  }, [date]);
 
   const handleItemPress = (item: ScheduleItem) => {
     setEditingItem(item);
@@ -64,12 +65,11 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ date, onBack }) => {
   };
 
   const handleCalendarSyncBack = () => {
+    console.log('CalendarSync back button pressed');
     setShowCalendarSync(false);
   };
 
   if (showCalendarSync) {
-    // Import CalendarSyncScreen component here to avoid circular dependency
-    const CalendarSyncScreen = require('../screens/CalendarSyncScreen').default;
     return (
       <CalendarSyncScreen onBack={handleCalendarSyncBack} />
     );
@@ -90,11 +90,19 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ date, onBack }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <TouchableOpacity 
+          onPress={onBack} 
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerText}>Schedule for {date}</Text>
-        <TouchableOpacity onPress={handleAddNew} style={styles.addButton}>
+        <TouchableOpacity 
+          onPress={handleAddNew} 
+          style={styles.addButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
@@ -132,7 +140,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   backButton: {
-    padding: 5,
+    padding: 10,
   },
   backButtonText: {
     color: 'white',
@@ -143,6 +151,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 10,
   },
   addButton: {
     backgroundColor: 'white',

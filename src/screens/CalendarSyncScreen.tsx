@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { CalendarSyncService } from '../services/calendarSyncService';
 import { CalendarEvent } from '../types/calendar';
@@ -23,10 +23,6 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   
   const calendarSyncService = new CalendarSyncService();
 
-  useEffect(() => {
-    loadCalendars();
-  }, [loadCalendars]);
-
   const loadCalendars = async () => {
     try {
       const calendarsList = await calendarSyncService.getCalendars();
@@ -39,6 +35,10 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       Alert.alert('Error', 'Failed to load calendars');
     }
   };
+
+  useEffect(() => {
+    loadCalendars();
+  }, []);
 
   const handleImport = async () => {
     if (!selectedCalendar) {
@@ -83,6 +83,11 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
+  const handleBackPress = () => {
+    console.log('Back button pressed in CalendarSyncScreen');
+    onBack();
+  };
+
   const handleRequestPermission = async () => {
     try {
       const granted = await calendarSyncService.requestCalendarPermission();
@@ -99,9 +104,13 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <TouchableOpacity 
+          onPress={handleBackPress} 
+          style={styles.backButton}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerText}>Calendar Sync</Text>
@@ -197,7 +206,7 @@ const CalendarSyncScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -211,6 +220,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   backButton: {
     padding: 10,
